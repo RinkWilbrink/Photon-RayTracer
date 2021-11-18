@@ -1,4 +1,6 @@
 #include <precomp.h>
+#include "Vector/Vector3.h"
+#include "Colour/Colour.h"
 
 int main(int argc, char* argv[])
 {
@@ -12,17 +14,14 @@ int main(int argc, char* argv[])
 
     for (int y = image_height - 1; y >= 0; --y)
     {
+        std::cerr << "\rScanlines Remaining: " << y << ' ' << std::flush;
+
         for (int x = 0; x < image_width; ++x)
         {
-            auto r = double(x) / (image_width - 1);
-            auto g = double(y) / (image_height - 1);
-            auto b = 0.25;
-
-            int ir = static_cast<int>(255.999 * r);
-            int ig = static_cast<int>(255.999 * g);
-            int ib = static_cast<int>(255.999 * b);
-            
-            std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+            colour pixel_colour(double(x) / (image_width - 1), double(y) / (image_height - 1), 0.25);
+            write_colour(std::cout, pixel_colour);
         }
     }
+
+    std::cerr << "\nDone\n";
 }
