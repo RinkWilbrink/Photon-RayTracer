@@ -1,7 +1,7 @@
 #include <precomp.h>
-#include "Vector/Vector3.h"
-#include "Colour/Colour.h"
-#include "Ray/Ray.h"
+#include "Libraries/Vector/Vector3.h"
+#include "Libraries/Colour/Colour.h"
+#include "Libraries/Ray/Ray.h"
 
 double hit_sphere(const Point3& center, double radius, const Ray& r)
 {
