@@ -5,7 +5,7 @@
 
 double hit_sphere(const Point3& center, double radius, const Ray& r)
 {
-    Vector3 oc = r.origin();
+    Vector3 oc = r.origin() - center;
     auto a = r.direction().length_sqr();
     auto half_b = dot(oc, r.direction());
     auto c = oc.length_sqr() - radius * radius;
