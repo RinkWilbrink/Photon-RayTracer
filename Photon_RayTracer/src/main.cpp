@@ -5,15 +5,14 @@
 
 double hit_sphere(const Point3& center, double radius, const Ray& r)
 {
-    Vector3 oc = r.origin() - center;
-    auto a = dot(r.direction(), r.direction());
-    auto b = 2.0 * dot(oc, r.direction());
-    auto c = dot(oc, oc) - radius*radius;
-    auto discriminant = b * b - 4 * a * c;
-
+    Vector3 oc = r.origin();
+    auto a = r.direction().length_sqr();
+    auto half_b = dot(oc, r.direction());
+    auto c = oc.length_sqr() - radius * radius;
+    auto discriminant = half_b * half_b - a * c;
     if(discriminant >= 0)
     {
-        return (- b - sqrt(discriminant)) / (2.0 * a);
+        return (-half_b - sqrt(discriminant)) / a;
     }
     return -1.0;
 }
@@ -24,10 +23,10 @@ Colour ray_colour(const Ray& r)
     if(t > 0.0)
     {
         Vector3 N = unit_vector(r.at(t) - Vector3(0, 0, -1));
-        return 0.5 * Colour(N.X() + 1, N.Y() + 1, N.Z() + 1);
+        return 0.5 * Colour(N.x + 1, N.y + 1, N.z + 1);
     }
     Vector3 unit_direction = unit_vector(r.direction());
-    t = 0.5 * (unit_direction.Y() + 1.0);
+    t = 0.5 * (unit_direction.y + 1.0);
     return (1.0 - t) * Colour(1.0, 1.0, 1.0) + t * Colour(0.5, 0.7, 1.0);
 }
 

@@ -9,9 +9,9 @@ public:
     Vector3() {}
     Vector3(double _x, double _y, double _z) { x = _x; y = _y; z = _z; }
 
-    double X() const { return x; }
-    double Y() const { return y; }
-    double Z() const { return z; }
+    //double X() const { return x; }
+    //double Y() const { return y; }
+    //double Z() const { return z; }
 
     Vector3 operator-() const { return Vector3(-x, -y, -z); }
     //double operator[](int i) const { return e[i]; }
