@@ -168,6 +168,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Libraries\Colour\Colour.h" />
+    <ClInclude Include="Libraries\Ray\Ray.h" />
     <ClInclude Include="Libraries\Vector\Vector3.h" />
     <ClInclude Include="src\precomp.h" />
     <ClInclude Include="src\Image\WriteImage.h" />

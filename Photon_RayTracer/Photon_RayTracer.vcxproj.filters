@@ -27,6 +27,9 @@
     <ClInclude Include="Libraries\Colour\Colour.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Libraries\Ray\Ray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Image\WriteImage.cpp">
