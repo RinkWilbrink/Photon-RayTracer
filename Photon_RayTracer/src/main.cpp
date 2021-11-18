@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 
         for (int x = 0; x < image_width; ++x)
         {
-            colour pixel_colour(double(x) / (image_width - 1), double(y) / (image_height - 1), 0.25);
+            Colour pixel_colour(double(x) / (image_width - 1), double(y) / (image_height - 1), 0.25);
             write_colour(std::cout, pixel_colour);
         }
     }

@@ -55,8 +55,8 @@ public:
     double z = 0.0;
 };
 
-using colour = Vector3;
-using point = Vector3;
+using Colour = Vector3;
+using Point3 = Vector3;
 
 // Vector3 Utility Functions
 
@@ -79,7 +79,12 @@ inline Vector3 operator*(const Vector3& u, const Vector3& v)
     return Vector3(u.x * v.x, u.y * v.y, u.z * v.z);
 }
 
-inline Vector3 operator*(double t, Vector3& v)
+inline Vector3 operator*(double t, const Vector3& v)
+{
+    return Vector3(t * v.x, t * v.y, t * v.z);
+}
+
+inline Vector3 operator*(const Vector3& v, double t)
 {
     return t * v;
 }
