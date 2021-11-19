@@ -1,6 +1,8 @@
 #include <precomp.h>
 #include "Libraries/rtweekend/rtweekend.h"
 
+#include "Camera/Camera.h"
+
 #include "Libraries/Colour/Colour.h"
 #include "Hittable/hittable_list.h"
 #include "Sphere.h"
@@ -23,6 +25,7 @@ int main(int argc, char* argv[])
     const auto aspect_ratio = 16.0 / 9.0;
     const int image_width = 400;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
+    const int samples_per_pixel = 100;
 
     // World
     hittable_list world;
@@ -30,14 +33,7 @@ int main(int argc, char* argv[])
     world.Add(make_shared<Sphere>(Point3(0, -100.5, -1), 100));
 
     // Camera
-    auto viewport_height = 2.0;
-    auto viewport_width = aspect_ratio * viewport_height;
-    auto focal_length = 1.0;
-
-    auto origin = Point3(0, 0, 0);
-    auto horizontal = Vector3(viewport_width, 0, 0);
-    auto vertical = Vector3(0, viewport_height, 0);
-    auto lower_left_corner = origin - horizontal / 2 - vertical / 2 - Vector3(0, 0, focal_length);
+    Camera cam;
 
     // Render
 
@@ -49,12 +45,16 @@ int main(int argc, char* argv[])
 
         for (int x = 0; x < image_width; ++x) // i
         {
-            auto u = double(x) / (image_width - 1);
-            auto v = double(y) / (image_height - 1);
-            Ray r(origin, lower_left_corner + u * horizontal + v * vertical - origin);
+            Colour pixel_colour(0, 0, 0);
+            for(int s = 0; s < samples_per_pixel; s++)
+            {
+                auto u = (x + random_double()) / (image_width - 1);
+                auto v = (y + random_double()) / (image_height - 1);
+                Ray r = cam.get_ray(u, v);
+                pixel_colour += ray_colour(r, world);
+            }
 
-            Colour pixel_colour = ray_colour(r, world);
-            write_colour(std::cout, pixel_colour);
+            write_colour(std::cout, pixel_colour, samples_per_pixel);
         }
     }
 
