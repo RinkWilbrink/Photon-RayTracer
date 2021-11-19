@@ -9,10 +9,6 @@ public:
     Vector3() {}
     Vector3(double _x, double _y, double _z) { x = _x; y = _y; z = _z; }
 
-    //double X() const { return x; }
-    //double Y() const { return y; }
-    //double Z() const { return z; }
-
     Vector3 operator-() const { return Vector3(-x, -y, -z); }
     //double operator[](int i) const { return e[i]; }
     //double& operator[](int i) { return e[i]; }
@@ -46,6 +42,15 @@ public:
     double length_sqr() const
     {
         return (x * x) + (y * y) + (z * z);
+    }
+
+    inline static Vector3 Random()
+    {
+        return Vector3(random_double(), random_double(), random_double());
+    }
+    inline static Vector3 Random(double min, double max)
+    {
+        return Vector3(random_double(min, max), random_double(min, max), random_double(min, max));
     }
 
 public:
@@ -109,4 +114,32 @@ inline Vector3 cross(const Vector3& u, const Vector3& v)
 inline Vector3 unit_vector(Vector3 v)
 {
     return v / v.length();
+}
+
+Vector3 random_in_unit_sphere()
+{
+    while(true)
+    {
+        Vector3 p = Vector3::Random(-1, 1);
+        if(p.length_sqr() >= 1)
+        {
+            continue;
+        }
+        return p;
+    }
+}
+
+Vector3 random_unit_sphere()
+{
+    return unit_vector(random_in_unit_sphere());
+}
+
+Vector3 random_in_hemisphere(const Vector3& normal)
+{
+    Vector3 in_unit_sphere = random_in_unit_sphere();
+    if(dot(in_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
+    {
+        return in_unit_sphere;
+    }
+    return -in_unit_sphere;
 }
