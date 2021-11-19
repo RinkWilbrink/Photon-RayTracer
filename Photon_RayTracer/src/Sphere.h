@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hittable.h"
+#include "Hittable/hittable.h"
 #include "Libraries/Vector/Vector3.h"
 
 class Sphere : public hittable
@@ -32,7 +32,6 @@ bool Sphere::hit(const Ray& r, double t_min, double t_max, hit_record& rec) cons
     auto sqrtd = sqrt(discriminant);
 
     // Find the nearest root that lies in the acceptable range.
-
     auto root = (-half_b - sqrtd) / a;
     if(root < t_min || root > t_max)
     {
@@ -45,7 +44,9 @@ bool Sphere::hit(const Ray& r, double t_min, double t_max, hit_record& rec) cons
 
     rec.t = root;
     rec.p = r.at(rec.t);
-    rec.normal = (rec.p - center) / radius;
+    Vector3 outward_normal = (rec.p - center) / radius;
+    rec.set_face_normal(r, outward_normal);
+
 
 	return true;
 }

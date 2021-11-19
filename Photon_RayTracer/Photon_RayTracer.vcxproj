@@ -169,8 +169,10 @@
   <ItemGroup>
     <ClInclude Include="Libraries\Colour\Colour.h" />
     <ClInclude Include="Libraries\Ray\Ray.h" />
+    <ClInclude Include="Libraries\rtweekend\rtweekend.h" />
     <ClInclude Include="Libraries\Vector\Vector3.h" />
-    <ClInclude Include="src\hittable.h" />
+    <ClInclude Include="src\Hittable\hittable.h" />
+    <ClInclude Include="src\Hittable\hittable_list.h" />
     <ClInclude Include="src\precomp.h" />
     <ClInclude Include="src\Image\WriteImage.h" />
     <ClInclude Include="src\Sphere.h" />

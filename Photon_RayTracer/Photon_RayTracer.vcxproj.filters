@@ -30,10 +30,16 @@
     <ClInclude Include="Libraries\Ray\Ray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\hittable.h">
+    <ClInclude Include="src\Hittable\hittable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Sphere.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hittable\hittable_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\rtweekend\rtweekend.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
