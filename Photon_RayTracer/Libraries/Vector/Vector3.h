@@ -53,6 +53,12 @@ public:
         return Vector3(random_double(min, max), random_double(min, max), random_double(min, max));
     }
 
+    bool near_zero() const
+    {
+        const double s = 1e-8;
+        return (fabs(x) < s) && (fabs(y) < s) && (fabs(z) < s);
+    }
+
 public:
     //double e[3];
     double x = 0.0;
@@ -129,7 +135,7 @@ Vector3 random_in_unit_sphere()
     }
 }
 
-Vector3 random_unit_sphere()
+Vector3 random_unit_vector()
 {
     return unit_vector(random_in_unit_sphere());
 }
@@ -142,4 +148,9 @@ Vector3 random_in_hemisphere(const Vector3& normal)
         return in_unit_sphere;
     }
     return -in_unit_sphere;
+}
+
+Vector3 Reflect(const Vector3& v, const Vector3& n)
+{
+    return v - 2 * dot(v, n) * n;
 }
