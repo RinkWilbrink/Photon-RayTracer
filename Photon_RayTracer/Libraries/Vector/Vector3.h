@@ -107,14 +107,17 @@ inline Vector3 operator/(Vector3 v, double t)
 
 inline double dot(const Vector3& u, const Vector3& v)
 {
-    return (u.x * v.x) + (u.y * v.y) + (u.z * v.z);
+    return u.x * v.x
+         + u.y * v.y
+         + u.z * v.z;
 }
 
 inline Vector3 cross(const Vector3& u, const Vector3& v)
 {
-    return Vector3((u.y * v.z) - (u.z, v.y),
-                   (u.z * v.x) - (u.x, v.z),
-                   (u.x * v.y) - (u.y, v.z));
+    return Vector3(
+        (u.y * v.z) - (u.z * v.y),
+        (u.z * v.x) - (u.x * v.z),
+        (u.x * v.y) - (u.y * v.x));
 }
 
 inline Vector3 unit_vector(Vector3 v)
@@ -122,40 +125,46 @@ inline Vector3 unit_vector(Vector3 v)
     return v / v.length();
 }
 
-Vector3 random_in_unit_sphere()
+inline Vector3 random_in_unit_disk()
 {
     while(true)
     {
-        Vector3 p = Vector3::Random(-1, 1);
-        if(p.length_sqr() >= 1)
-        {
-            continue;
-        }
+        auto p = Vector3(random_double(-1, 1), random_double(-1, 1), 0);
+        if(p.length_sqr() >= 1) continue;
         return p;
     }
 }
 
-Vector3 random_unit_vector()
+inline Vector3 random_in_unit_sphere()
+{
+    while(true)
+    {
+        auto p = Vector3::Random(-1, 1);
+        if(p.length_sqr() >= 1) continue;
+        return p;
+    }
+}
+
+inline Vector3 random_unit_vector()
 {
     return unit_vector(random_in_unit_sphere());
 }
 
-Vector3 random_in_hemisphere(const Vector3& normal)
+inline Vector3 random_in_hemisphere(const Vector3& normal)
 {
     Vector3 in_unit_sphere = random_in_unit_sphere();
     if(dot(in_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
-    {
         return in_unit_sphere;
-    }
-    return -in_unit_sphere;
+    else
+        return -in_unit_sphere;
 }
 
-Vector3 Reflect(const Vector3& v, const Vector3& n)
+inline Vector3 reflect(const Vector3& v, const Vector3& n)
 {
     return v - 2 * dot(v, n) * n;
 }
 
-Vector3 Refract(const Vector3& uv, const Vector3& n, double etai_over_etat)
+inline Vector3 refract(const Vector3& uv, const Vector3& n, double etai_over_etat)
 {
     auto cos_theta = fmin(dot(-uv, n), 1.0);
     Vector3 r_out_perp = etai_over_etat * (uv + cos_theta * n);

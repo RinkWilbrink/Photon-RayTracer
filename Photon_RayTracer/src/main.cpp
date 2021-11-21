@@ -47,17 +47,22 @@ int main()
 
     auto material_ground = make_shared<Lambertian>(Colour(0.8, 0.8, 0.0));
     auto material_center = make_shared<Lambertian>(Colour(0.1, 0.2, 0.5));
-    auto material_left   = make_shared<Dielectric>(1.5);
-    auto material_right  = make_shared<Metal>(Colour(0.8, 0.6, 0.2), 1.0);
-    
+    auto material_left = make_shared<Dielectric>(1.5);
+    auto material_right = make_shared<Metal>(Colour(0.8, 0.6, 0.2), 0.0);
+
     world.Add(make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0, material_ground));
     world.Add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
     world.Add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
-    world.Add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, material_left));
+    world.Add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.45, material_left));
     world.Add(make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
 
     // Camera
-    Camera cam;
+    Point3 lookfrom(3, 3, 2);
+    Point3 lookat(0, 0, -1);
+    Vector3 vup(0, 1, 0);
+    auto dist_to_focus = (lookfrom - lookat).length();
+    auto aperture = 2.0;
+    Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
     // Render
 

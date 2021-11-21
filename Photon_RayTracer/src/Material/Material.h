@@ -44,7 +44,7 @@ public:
 
 	virtual bool scatter(const Ray& r_in, const hit_record& rec, Colour& attenuation, Ray& scattered) const override
 	{
-		Vector3 reflected = Reflect(unit_vector(r_in.direction()), rec.normal);
+		Vector3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
 		scattered = Ray(rec.p, reflected + fuzz * random_in_unit_sphere());
 		attenuation = albedo;
 		return (dot(scattered.direction(), rec.normal) > 0);
@@ -59,6 +59,7 @@ public:
 private:
 	static double reflectance(double cosine, double ref_idx)
 	{
+		// Use Schlick's approximation for reflectance.
 		auto r0 = (1 - ref_idx) / (1 + ref_idx);
 		r0 = r0 * r0;
 		return r0 + (1 - r0) * pow((1 - cosine), 5);
@@ -79,13 +80,13 @@ public:
 		bool cannot_refract = refraction_ratio * sin_theta > 1.0;
 		Vector3 direction;
 
-		if(cannot_refract || reflectance(cos_theta, refraction_ratio) > random_double())
+		if (cannot_refract || reflectance(cos_theta, refraction_ratio) > random_double())
 		{
-			direction = Reflect(unit_direction, rec.normal);
+			direction = reflect(unit_direction, rec.normal);
 		}
 		else
 		{
-			direction = Refract(unit_direction, rec.normal, refraction_ratio);
+			direction = refract(unit_direction, rec.normal, refraction_ratio);
 		}
 
 		scattered = Ray(rec.p, direction);
