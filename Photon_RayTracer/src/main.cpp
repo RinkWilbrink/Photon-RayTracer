@@ -8,20 +8,25 @@
 #include "Sphere/Sphere.h"
 #include "Material/Material.h"
 
+#include "Libraries/notstd/Array2D.h"
+#include "Libraries/notstd/Array.h"
+
+#include <chrono>
+
 Colour ray_colour(const Ray& r, const hittable& world, int depth)
 {
     hit_record rec;
 
-    if(depth <= 0)
+    if (depth <= 0)
     {
         return Colour(0, 0, 0);
     }
 
-    if(world.hit(r, 0.001, infinity, rec))
+    if (world.hit(r, 0.001, infinity, rec))
     {
         Ray scattered;
         Colour attentuation;
-        if(rec.mat_ptr->scatter(r, rec, attentuation, scattered))
+        if (rec.mat_ptr->scatter(r, rec, attentuation, scattered))
         {
             return attentuation * ray_colour(scattered, world, depth - 1);
         }
@@ -79,7 +84,7 @@ hittable_list random_scene()
 
     shared_ptr<Dielectric> material1 = make_shared<Dielectric>(1.5);
     world.Add(make_shared<Sphere>(Point3(0, 1, 0), 1.0, material1));
-    
+
     shared_ptr<Lambertian> material2 = make_shared<Lambertian>(Colour(0.4, 0.2, 0));
     world.Add(make_shared<Sphere>(Point3(-4, 1, 0), 1.0, material2));
 
@@ -89,33 +94,113 @@ hittable_list random_scene()
     return world;
 }
 
+// Image
+const double aspect_ratio = 1.0 / 1.0;
+const int image_width = 256;
+const int image_height = static_cast<int>(image_width / aspect_ratio);
+const int samples_per_pixel = 400;
+const int max_depth = 50;
+
+// World
+hittable_list world = random_scene();
+
+// Camera
+Point3 lookfrom(13, 2, 3);
+Point3 lookat(0, 0, 0);
+Vector3 vup(0, 1, 0);
+double dist_to_focus = 10.0;
+double aperture = 0.1;
+
+Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+
+// Multi threading
+const int TileSize = 16;
+RinkWilbrink::notstd::Array<std::thread> threads = RinkWilbrink::notstd::Array<std::thread>(std::thread::hardware_concurrency());
+int xSize = image_width / TileSize;
+int ySize = image_height / TileSize;
+
+RinkWilbrink::notstd::Array2D<Colour> pixels = RinkWilbrink::notstd::Array2D<Colour>(image_width, image_height);
+
+struct threadTile
+{
+    void SetValues(uint8_t _xStart, uint8_t _yStart, uint8_t _xSize, uint8_t _ySize)
+    {
+        xStart = _xStart;
+        xSize = _xSize;
+        yStart = _yStart;
+        ySize = _ySize;
+    }
+
+    int index = 0;
+
+    uint8_t xStart = 0;
+    uint8_t xSize = 0;
+
+    uint8_t yStart = 0;
+    uint8_t ySize = 0;
+};
+
+void TraceRays(threadTile _threadTile, int _jobsTodo)
+{
+    for (int y = _threadTile.yStart + _threadTile.ySize; y >= _threadTile.ySize; --y) // j
+    {
+        std::cerr << "\r" << " Scan Lines: " << y << " of " << image_height - 1 << " Jobs: " << _jobsTodo << "\n" << std::flush;
+        //std::cerr << "\r" << _threadTile.xStart << "-" << _threadTile.yStart << " | " << _threadTile.xSize << '-' << _threadTile.ySize  << " | " << _threadTile.index << ' ' << std::flush;
+
+        for (int x = _threadTile.xStart; x < _threadTile.xStart + _threadTile.xSize; ++x) // i
+        {
+            //Colour pixel_colour(0, 0, 0);
+            for (int s = 0; s < samples_per_pixel; ++s)
+            {
+                auto u = (x + random_double()) / (image_width - 1);
+                auto v = (y + random_double()) / (image_height - 1);
+                Ray r = cam.get_ray(u, v);
+                pixels(x, y) = ray_colour(r, world, max_depth);
+            }
+        }
+    }
+}
+
 int main()
 {
-    // Image
-    const double aspect_ratio = 3.0 / 2.0;
-    const int image_width = 600;
-    const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 500;
-    const int max_depth = 50;
+    RinkWilbrink::notstd::Array2D<threadTile> RenderingTiles = RinkWilbrink::notstd::Array2D<threadTile>(xSize, ySize);
 
-    // World
-    hittable_list world = random_scene();
-
-    // Camera
-    Point3 lookfrom(13, 2, 3);
-    Point3 lookat(0, 0, 0);
-    Vector3 vup(0, 1, 0);
-    auto dist_to_focus = 10.0;
-    auto aperture = 0.1;
-
-    Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+    for (size_t y = 0; y < ySize; y++)
+    {
+        for (size_t x = 0; x < xSize; x++)
+        {
+            RenderingTiles(x, y).SetValues(x * TileSize, y * TileSize, TileSize, TileSize);
+            RenderingTiles(x, y).index = (1 + x) * y;
+        }
+    }
+    int test = 0;
 
     // Render
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
+    int jobsTodo = (xSize * ySize);
+    while (jobsTodo > 0)
+    {
+        for (size_t i = 0; i < threads.get_size(); i++)
+        {
+            int _x = jobsTodo % xSize;
+            int _y = (jobsTodo - jobsTodo % ySize) / ySize;
+
+            threads[i] = std::thread(TraceRays, RenderingTiles(_x, _y), jobsTodo);
+
+            jobsTodo--;
+        }
+
+        for (size_t i = 0; i < threads.get_size(); i++)
+        {
+            threads[i].join();
+        }
+    }
+
+    /*
     for (int y = image_height - 1; y >= 0; --y) // j
     {
-        std::cerr << "\r" << y << " of " << image_height - 1 << " Scan Lines Remaining!" << ' ' << std::flush;
+        std::cerr << "\r" << "Thread Count: " << threads.get_size() << " | " << y << " of " << image_height - 1 << " Scan Lines Remaining!" << ' ' << std::flush;
 
         for (int x = 0; x < image_width; ++x) // i
         {
@@ -130,6 +215,18 @@ int main()
             write_colour(std::cout, pixel_colour, samples_per_pixel);
         }
     }
+    */
 
-    std::cerr << "\nDone\n";
+    for (int y = image_height - 1; y >= 0; --y)
+    {
+        for (int x = 0; x < image_width; ++x)
+        {
+            //std::cerr << "\r" << x << '-' << y << "Colours(" << pixels(x, y).x << '-' << pixels(x, y).y << '-' << pixels(x, y).z << ")" << ' ' << std::flush;
+            write_colour(std::cout, pixels(x, y) * 255, samples_per_pixel);
+        }
+    }
+
+    std::cerr << "\nTodo: " << " Done\n";
+    //std::cerr << "Width: " << image_width << " Done\n";
+    //std::cerr << "Height: " << image_height << " Done\n";
 }

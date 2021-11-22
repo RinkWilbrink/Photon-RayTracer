@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Libraries\notstd\Array.h" />
+    <ClInclude Include="Libraries\notstd\Array2D.h" />
+    <ClInclude Include="Libraries\notstd\List.h" />
     <ClInclude Include="src\Camera\Camera.h" />
     <ClInclude Include="src\Hittable\hittable.h" />
     <ClInclude Include="src\Hittable\hittable_list.h" />
