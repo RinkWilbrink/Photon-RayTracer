@@ -118,6 +118,8 @@ double aperture = 0.1;
 Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
 // Multi threading
+#ifdef MULTITHREADING
+
 const int TileSize = 16;
 RinkWilbrink::notstd::Array<std::thread> threads = RinkWilbrink::notstd::Array<std::thread>(std::thread::hardware_concurrency());
 int xSize = image_width / TileSize;
@@ -167,6 +169,8 @@ void TraceRays(threadTile _threadTile, int _jobsTodo)
     std::cerr << "\r" << "Job " << _jobsTodo << " Completed!\n" << std::flush;
 }
 
+#endif
+
 int main()
 {
     std::chrono::steady_clock::time_point startingTime = std::chrono::high_resolution_clock::now();
@@ -202,7 +206,17 @@ int main()
 
         for (size_t i = 0; i < threads.get_size(); i++)
         {
-            threads[i].join();
+            if (threads[i].joinable())
+            {
+                if (jobsTodo > 2)
+                {
+                    threads[i].detach();
+                }
+                else
+                {
+                    threads[i].join();
+                }
+            }
         }
     }
 
@@ -217,7 +231,7 @@ int main()
 #else
     for (int y = image_height - 1; y >= 0; --y) // j
     {
-        std::cerr << "\r" << "Thread Count: " << threads.get_size() << " | " << y << " of " << image_height - 1 << " Scan Lines Remaining!" << ' ' << std::flush;
+        std::cerr << "\r" << y << " of " << image_height - 1 << " Scan Lines Remaining!" << ' ' << std::flush;
 
         for (int x = 0; x < image_width; ++x) // i
         {
