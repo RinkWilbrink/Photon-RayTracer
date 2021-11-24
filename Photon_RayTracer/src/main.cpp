@@ -13,6 +13,10 @@
 
 #include <chrono>
 
+#if false
+#define MULTITHREADING
+#endif
+
 Colour ray_colour(const Ray& r, const hittable& world, int depth)
 {
     hit_record rec;
@@ -98,7 +102,7 @@ hittable_list random_scene()
 const double aspect_ratio = 1.0 / 1.0;
 const int image_width = 256;
 const int image_height = static_cast<int>(image_width / aspect_ratio);
-const int samples_per_pixel = 400;
+const int samples_per_pixel = 50; // 500
 const int max_depth = 50;
 
 // World
@@ -142,14 +146,15 @@ struct threadTile
 
 void TraceRays(threadTile _threadTile, int _jobsTodo)
 {
-    for (int y = _threadTile.yStart + _threadTile.ySize; y >= _threadTile.ySize; --y) // j
-    {
-        std::cerr << "\r" << " Scan Lines: " << y << " of " << image_height - 1 << " Jobs: " << _jobsTodo << "\n" << std::flush;
-        //std::cerr << "\r" << _threadTile.xStart << "-" << _threadTile.yStart << " | " << _threadTile.xSize << '-' << _threadTile.ySize  << " | " << _threadTile.index << ' ' << std::flush;
+    int yMax = _threadTile.yStart + _threadTile.ySize;
+    int yStart = _threadTile.yStart;
 
-        for (int x = _threadTile.xStart; x < _threadTile.xStart + _threadTile.xSize; ++x) // i
+    for (int  y = yStart; y < yMax; y++)
+    {
+        std::cerr << "\r" << " Scan Line: (" << y - yStart << " of " << yMax - yStart << ") | Job: " << _jobsTodo << "\n" << std::flush;
+
+        for (int x = 0; x < _threadTile.xStart + _threadTile.xSize; x++)
         {
-            //Colour pixel_colour(0, 0, 0);
             for (int s = 0; s < samples_per_pixel; ++s)
             {
                 auto u = (x + random_double()) / (image_width - 1);
@@ -159,10 +164,18 @@ void TraceRays(threadTile _threadTile, int _jobsTodo)
             }
         }
     }
+    std::cerr << "\r" << "Job " << _jobsTodo << " Completed!\n" << std::flush;
 }
 
 int main()
 {
+    std::chrono::steady_clock::time_point startingTime = std::chrono::high_resolution_clock::now();
+
+    // Render
+    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+
+#ifdef MULTITHREADING
+
     RinkWilbrink::notstd::Array2D<threadTile> RenderingTiles = RinkWilbrink::notstd::Array2D<threadTile>(xSize, ySize);
 
     for (size_t y = 0; y < ySize; y++)
@@ -173,10 +186,6 @@ int main()
             RenderingTiles(x, y).index = (1 + x) * y;
         }
     }
-    int test = 0;
-
-    // Render
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
     int jobsTodo = (xSize * ySize);
     while (jobsTodo > 0)
@@ -197,7 +206,15 @@ int main()
         }
     }
 
-    /*
+    for (int y = image_height - 1; y >= 0; --y)
+    {
+        for (int x = 0; x < image_width; ++x)
+        {
+            write_colour(std::cout, pixels(x, y) * samples_per_pixel, samples_per_pixel);
+        }
+    }
+
+#else
     for (int y = image_height - 1; y >= 0; --y) // j
     {
         std::cerr << "\r" << "Thread Count: " << threads.get_size() << " | " << y << " of " << image_height - 1 << " Scan Lines Remaining!" << ' ' << std::flush;
@@ -215,18 +232,11 @@ int main()
             write_colour(std::cout, pixel_colour, samples_per_pixel);
         }
     }
-    */
+#endif
 
-    for (int y = image_height - 1; y >= 0; --y)
-    {
-        for (int x = 0; x < image_width; ++x)
-        {
-            //std::cerr << "\r" << x << '-' << y << "Colours(" << pixels(x, y).x << '-' << pixels(x, y).y << '-' << pixels(x, y).z << ")" << ' ' << std::flush;
-            write_colour(std::cout, pixels(x, y) * 255, samples_per_pixel);
-        }
-    }
+    std::chrono::steady_clock::time_point endTime = std::chrono::high_resolution_clock::now();
+    auto time = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startingTime);
 
     std::cerr << "\nTodo: " << " Done\n";
-    //std::cerr << "Width: " << image_width << " Done\n";
-    //std::cerr << "Height: " << image_height << " Done\n";
+    std::cerr << "Time Cost: " << time.count() << " ms\n";
 }
