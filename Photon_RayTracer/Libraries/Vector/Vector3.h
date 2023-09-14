@@ -2,172 +2,87 @@
 
 #include <cmath>
 #include <iostream>
+#include "Math/Math.h"
 
-class Vector3
+using namespace Tmpl8;
+
+using Colour = Tmpl8::vec3;
+using Point3 = Tmpl8::vec3;
+
+class Vector
 {
 public:
-    Vector3() {}
-    Vector3(double _x, double _y, double _z) { x = _x; y = _y; z = _z; }
-
-    Vector3 operator-() const { return Vector3(-x, -y, -z); }
-    //double operator[](int i) const { return e[i]; }
-    //double& operator[](int i) { return e[i]; }
-
-    Vector3& operator+=(const Vector3& v)
+    inline static Tmpl8::vec3 Random()
     {
-        x += v.x;
-        y += v.y;
-        z += v.z;
-        return *this;
+        return Tmpl8::vec3(random_float(), random_float(), random_float());
     }
-
-    Vector3& operator*=(const double t)
+    inline static Tmpl8::vec3 Random(float min, float max)
     {
-        x *= t;
-        y *= t;
-        z *= t;
-        return *this;
+        return Tmpl8::vec3(random_float(min, max), random_float(min, max), random_float(min, max));
     }
-
-    Vector3& operator/=(const double t)
-    {
-        return *this *= 1/t;
-    }
-
-    double length() const
-    {
-        return sqrt(length_sqr());
-    }
-
-    double length_sqr() const
-    {
-        return (x * x) + (y * y) + (z * z);
-    }
-
-    inline static Vector3 Random()
-    {
-        return Vector3(random_double(), random_double(), random_double());
-    }
-    inline static Vector3 Random(double min, double max)
-    {
-        return Vector3(random_double(min, max), random_double(min, max), random_double(min, max));
-    }
-
-    bool near_zero() const
-    {
-        const double s = 1e-8;
-        return (fabs(x) < s) && (fabs(y) < s) && (fabs(z) < s);
-    }
-
-public:
-    //double e[3];
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
 };
 
-using Colour = Vector3;
-using Point3 = Vector3;
-
-// Vector3 Utility Functions
-
-inline std::ostream& operator<<(std::ostream &out, const Vector3 &v) {
-    return out << v.x << ' ' << v.y << ' ' << v.z;
+/*
+*/
+inline Tmpl8::vec3 UnitVector(vec3 v)
+{
+    float length = 1.0f / v.Length();
+    return Tmpl8::vec3(v.x * length, v.y * length, v.z * length);
 }
 
-inline Vector3 operator+(const Vector3& u, const Vector3& v)
+inline Tmpl8::vec3 RandomInUnitSphere()
 {
-    return Vector3(u.x + v.x, u.y + v.y, u.z + v.z);
-}
-
-inline Vector3 operator-(const Vector3& u, const Vector3& v)
-{
-    return Vector3(u.x - v.x, u.y - v.y, u.z - v.z);
-}
-
-inline Vector3 operator*(const Vector3& u, const Vector3& v)
-{
-    return Vector3(u.x * v.x, u.y * v.y, u.z * v.z);
-}
-
-inline Vector3 operator*(double t, const Vector3& v)
-{
-    return Vector3(t * v.x, t * v.y, t * v.z);
-}
-
-inline Vector3 operator*(const Vector3& v, double t)
-{
-    return t * v;
-}
-
-inline Vector3 operator/(Vector3 v, double t)
-{
-    return (1 / t) * v;
-}
-
-inline double dot(const Vector3& u, const Vector3& v)
-{
-    return u.x * v.x
-         + u.y * v.y
-         + u.z * v.z;
-}
-
-inline Vector3 cross(const Vector3& u, const Vector3& v)
-{
-    return Vector3(
-        (u.y * v.z) - (u.z * v.y),
-        (u.z * v.x) - (u.x * v.z),
-        (u.x * v.y) - (u.y * v.x));
-}
-
-inline Vector3 unit_vector(Vector3 v)
-{
-    return v / v.length();
-}
-
-inline Vector3 random_in_unit_disk()
-{
-    while(true)
+    while (true)
     {
-        auto p = Vector3(random_double(-1, 1), random_double(-1, 1), 0);
-        if(p.length_sqr() >= 1) continue;
-        return p;
+        Tmpl8::vec3 point = Vector::Random(-1, 1);
+        if (point.sqrLenght() >= 1)
+        {
+            continue;
+        }
+        return point;
     }
 }
 
-inline Vector3 random_in_unit_sphere()
+inline Tmpl8::vec3 RandomUnitVector()
 {
-    while(true)
+    return RandomInUnitSphere().Normalized();
+}
+
+inline Tmpl8::vec3 RandomInHemisphere(const Tmpl8::vec3& normal)
+{
+    Tmpl8::vec3 in_unit_sphere = RandomInUnitSphere();
+    if (in_unit_sphere.Dot(normal) > 0.0f) // In the same hemisphere as the normal
     {
-        auto p = Vector3::Random(-1, 1);
-        if(p.length_sqr() >= 1) continue;
-        return p;
-    }
-}
-
-inline Vector3 random_unit_vector()
-{
-    return unit_vector(random_in_unit_sphere());
-}
-
-inline Vector3 random_in_hemisphere(const Vector3& normal)
-{
-    Vector3 in_unit_sphere = random_in_unit_sphere();
-    if(dot(in_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
         return in_unit_sphere;
-    else
-        return -in_unit_sphere;
+    }
+    return -in_unit_sphere;
 }
 
-inline Vector3 reflect(const Vector3& v, const Vector3& n)
+inline Tmpl8::vec3 Reflect(const Tmpl8::vec3& v, const Tmpl8::vec3& n)
 {
-    return v - 2 * dot(v, n) * n;
+    return v - 2 * v.Dot(n) * n;
+    //return v - 2 * Dot(v, n) * n;
 }
 
-inline Vector3 refract(const Vector3& uv, const Vector3& n, double etai_over_etat)
+inline Tmpl8::vec3 Refract(const Tmpl8::vec3& uv, const Tmpl8::vec3& n, float etai_over_etat)
 {
-    auto cos_theta = fmin(dot(-uv, n), 1.0);
-    Vector3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
-    Vector3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_sqr())) * n;
+    float cos_theta = fmin(n.Dot(-uv), 1.0f);
+    Tmpl8::vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    Tmpl8::vec3 r_out_parallel = -sqrtf(fabsf(1.0f - r_out_perp.sqrLenght())) * n;
     return r_out_perp + r_out_parallel;
 }
+
+// ------------------------------------------------------------
+
+class Vector3Int
+{
+public:
+    int x = 0;
+    int y = 0;
+    int z = 0;
+
+public:
+
+
+private:
+};
